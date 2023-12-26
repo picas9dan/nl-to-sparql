@@ -337,7 +337,7 @@ class OKSparqlCompact2VerboseConverter:
                     ],
                 ),
             ]
-            arrheniusmodel_vars = ["?ActivationEnergyValue", "?ActivationEnergyUnit", "?ArrheniusFactorValue", "?ArrheniusFactorUnit", "?TemperatureExponentialValue"]
+            arrheniusmodel_vars = ["?ActivationEnergyValue", "?ActivationEnergyUnit", "?ArrheniusFactorValue", "?ArrheniusFactorUnit", "?TemperatureExponentValue"]
             
             multiarrheniusmodel_patterns = [
                 ValuesClause(
@@ -362,7 +362,7 @@ class OKSparqlCompact2VerboseConverter:
                     ],
                 ),
             ]
-            multiarrheniusmodel_vars = ["?ArrheniusModel", "?ActivationEnergyValue", "?ActivationEnergyUnit", "?ArrheniusFactorValue", "?ArrheniusFactorUnit", "?TemperatureExponentialValue"]
+            multiarrheniusmodel_vars = ["?ArrheniusModel", "?ActivationEnergyValue", "?ActivationEnergyUnit", "?ArrheniusFactorValue", "?ArrheniusFactorUnit", "?TemperatureExponentValue"]
 
             falloffmodel_patterns = [
                 ValuesClause(
