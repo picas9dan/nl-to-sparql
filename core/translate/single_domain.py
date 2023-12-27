@@ -3,7 +3,7 @@ from core.args_schema import ModelArguments
 
 from core.data_processing.constants import T5_PREFIX_NL2SPARQL
 from core.data_processing.ontokin.postprocess import OKPostProcessor
-from core.data_processing.postprocess import PostProcessor
+from core.data_processing.postprocess import IdentityPostProcessor, PostProcessor
 from core.data_processing.sparql import postprocess_sparql
 from core.data_processing.nl import preprocess_nl
 from core.data_processing.ontospecies.postprocess import OSPostProcessor
@@ -23,6 +23,8 @@ class SingleDomainTranslator:
             postprocessor = OSPostProcessor()
         elif domain == "ontokin":
             postprocessor = OKPostProcessor()
+        elif domain == "ontobuiltenv":
+            postprocessor = IdentityPostProcessor()
         else:
             raise ValueError("Unrecognized domain: " + domain)
         self.postprocessor: PostProcessor = postprocessor
@@ -39,6 +41,7 @@ class SingleDomainTranslator:
             )
             pred_verbose_str = str(pred_verbose)
         except Exception as e:
+            print(e)
             traceback.print_tb(e.__traceback__)
             pred_verbose_str = None
 

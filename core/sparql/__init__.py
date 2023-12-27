@@ -124,6 +124,27 @@ class SparqlQuery(SparqlBase):
                     ptr += 1
                 obj = graph_patterns_str[: ptr + 1]
                 graph_patterns_str = graph_patterns_str[ptr + 1 :].strip()
+            elif graph_patterns_str.startswith('['):
+                stack = ['[']
+                ptr = 1
+                while ptr < len(graph_patterns_str):
+                    if graph_patterns_str[ptr] in "[":
+                        stack.append('[')
+                    elif graph_patterns_str[ptr] == "]":
+                        assert stack[-1] == '[', "Unexpected close square bracket: " + graph_patterns_str
+                        if len(stack) == 1:
+                            obj = graph_patterns_str[:ptr + 1]
+                            graph_patterns_str = graph_patterns_str[ptr + 1 :].strip()
+                            break
+                        else:
+                            stack.pop()
+                    elif graph_patterns_str[ptr] == '"':
+                        ptr += 1
+                        while ptr < len(graph_patterns_str) and graph_patterns_str[ptr] != '"':
+                            ptr += 1
+                    else:
+                        pass
+                    ptr += 1
             else:
                 splits = graph_patterns_str.split(maxsplit=1)
                 if len(splits) == 2:

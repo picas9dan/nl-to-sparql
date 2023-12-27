@@ -10,8 +10,10 @@ class ModelWrapper:
     ):
         if model_args.model_format == "hf":
             model, tokenizer = get_hf_model_and_tokenizer(model_args)
-        elif model_args.model_format == "ort":
+        elif model_args.model_format == "onnx":
             model, tokenizer = get_ort_model_and_tokenizer(model_args)
+        else:
+            raise ValueError("Unrecognized model_format: " + model_args.model_format)
             
         self.model = model
         self.tokenizer = tokenizer
