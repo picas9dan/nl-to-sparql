@@ -120,7 +120,31 @@ class OBECompact2VerboseConverter:
         except AssertionError:
             return None
         
-    
+    def _try_convert_property_haspropertyusage_triple(self, pattern: GraphPattern):
+        try:
+            """
+            ?Property obe:hasPropertyUsage ?PropertyUsage .
+            """
+            assert isinstance(pattern, TriplePattern)
+            assert pattern.subj == "?Property"
+            assert len(pattern.tails) == 1
+
+            p, o = pattern.tails[0]
+            assert p == "obe:hasPropertyUsage"
+            assert o == "?PropertyUsage"
+
+            """
+            ?Property obe:hasPropertyUsage ?PropertyUsage .
+            ?PropertyUsage a/rdfs:label ?PropertyUsageLabel .
+            """
+            patterns = [
+                pattern,
+                TriplePattern.from_triple("?PropertyUsage", "a/rdfs:label", "?PropertyUsageLabel")
+            ]
+            vars = ["?PropertyUsageLabel"]
+            return patterns, vars
+        except AssertionError:
+            return None
 
     def convert(self, sparql_compact: SparqlQuery):
         select_vars_verbose = list(sparql_compact.select_clause.vars)
@@ -140,6 +164,13 @@ class OBECompact2VerboseConverter:
                 continue
 
             optional = self._try_convert_property_hasaddress_triple(pattern)
+            if optional is not None:
+                patterns, select_vars = optional
+                select_vars_verbose.extend(select_vars)
+                graph_patterns_verbose.extend(patterns)
+                continue
+
+            optional = self._try_convert_property_haspropertyusage_triple(pattern)
             if optional is not None:
                 patterns, select_vars = optional
                 select_vars_verbose.extend(select_vars)
