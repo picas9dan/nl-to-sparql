@@ -63,23 +63,24 @@ def get_trainer(
     sacrebleu = evaluate.load("sacrebleu")
     exact_match = evaluate.load("exact_match")
     
-    def postprocess_then_normalize(pred: str):
-        pred = postprocess_sparql(pred)
+    def normalize(text: str):
         try:
-            pred = str(SparqlQuery.fromstring(pred))
+            return str(SparqlQuery.fromstring(text))
         except:
-            pass
-        return pred
+            return text
+    
+    def decode_tokens_then_normalize(tokens):
+        tokens = np.where(tokens != -100, tokens, tokenizer.pad_token_id)
+        decoded = tokenizer.batch_decode(tokens, skip_special_tokens=True)
+        decoded = [postprocess_sparql(x) for x in decoded]
+        decoded = [normalize(x) for x in decoded]
+        return decoded
 
     def compute_metrics(eval_preds):
         preds, labels = eval_preds
-        labels = np.where(labels != -100, labels, tokenizer._pad_token_type_id)
 
-        decoded_preds = tokenizer.batch_decode(preds, skip_special_tokens=True)
-        decoded_labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
-
-        decoded_preds = [postprocess_then_normalize(x) for x in decoded_preds]
-        decoded_labels = [postprocess_then_normalize(x) for x in decoded_labels]
+        decoded_labels = decode_tokens_then_normalize(labels)
+        decoded_preds = decode_tokens_then_normalize(preds)
 
         sacrebleu_score = sacrebleu.compute(references=decoded_labels, predictions=decoded_preds)
         exactmatch_score = exact_match.compute(references=decoded_labels, predictions=decoded_preds)
