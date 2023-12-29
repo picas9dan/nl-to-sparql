@@ -84,11 +84,18 @@ def get_trainer(
 
         sacrebleu_score = sacrebleu.compute(references=decoded_labels, predictions=decoded_preds)
         exactmatch_score = exact_match.compute(references=decoded_labels, predictions=decoded_preds)
+        combined_score = (exactmatch_score["exact_match"] * 100 + sacrebleu_score["score"]) // 2
 
         return dict(
             sacrebleu=sacrebleu_score,
-            exact_match=exactmatch_score
+            exact_match=exactmatch_score,
+            combined=combined_score
         )
+
+    train_args.predict_with_generate = True
+    train_args.load_best_model_at_end = True
+    train_args.metric_for_best_model = "combined"
+    train_args.greater_is_better = True
 
     return Seq2SeqTrainer(
         model=model,
