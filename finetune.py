@@ -2,18 +2,21 @@ import json
 import os
 
 from datasets import Dataset
+import numpy as np
 import transformers
 from transformers import (
     DataCollatorForSeq2Seq,
     Seq2SeqTrainingArguments,
     Seq2SeqTrainer,
 )
+import evaluate
 
 from core.data_processing.constants import T5_PREFIX_DOMAINCLS, T5_PREFIX_NL2SPARQL
 from core.data_processing.nl import preprocess_nl
-from core.data_processing.sparql import preprocess_sparql
+from core.data_processing.sparql import postprocess_sparql, preprocess_sparql
 from core.args_schema import DatasetArguments, ModelArguments
 from core.model_utils import get_hf_model_and_tokenizer
+from core.sparql import SparqlQuery
 
 
 def get_trainer(
@@ -56,6 +59,32 @@ def get_trainer(
     eval_dataset = _get_tokenized_dataset(data_args.eval_data_path)
 
     data_collator = DataCollatorForSeq2Seq(tokenizer=tokenizer, model=model)
+    
+    bleu = evaluate.load("bleu")
+    exact_match = evaluate.load("exact_match")
+    
+    def postprocess_then_normalize(pred: str):
+        pred = postprocess_sparql(pred)
+        pred = str(SparqlQuery.fromstring(pred))
+        return pred
+
+    def compute_metrics(eval_preds):
+        preds, labels = eval_preds
+        labels = np.where(labels != -100, labels, tokenizer._pad_token_type_id)
+
+        decoded_preds = tokenizer.batch_decode(preds, skip_special_tokens=True)
+        decoded_labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
+
+        decoded_preds = [postprocess_then_normalize(x) for x in decoded_preds]
+        decoded_labels = [postprocess_then_normalize(x) for x in decoded_labels]
+
+        bleu_score = bleu.compute(references=[[x] for x in decoded_labels], predictions=decoded_preds)
+        exact_match_score = exact_match.compute(references=decoded_labels, predictions=decoded_preds)
+
+        return dict(
+            bleu=bleu_score,
+            exact_match=exact_match_score
+        )
 
     return Seq2SeqTrainer(
         model=model,
@@ -64,6 +93,7 @@ def get_trainer(
         eval_dataset=eval_dataset,
         tokenizer=tokenizer,
         data_collator=data_collator,
+        compute_metrics=compute_metrics
     )
 
 

@@ -6,8 +6,7 @@ import transformers
 from tqdm import tqdm
 
 from core.args_schema import DatasetArguments, InferenceArguments, ModelArguments
-from core.translate.multi_domain import MultiDomainTranslator
-from core.translate.single_domain import SingleDomainTranslator
+from core.translate import Translator
 
 
 def infer():
@@ -17,12 +16,7 @@ def infer():
     model_args, data_args, infer_args = hfparser.parse_args_into_dataclasses()
 
     os.makedirs(os.path.dirname(infer_args.out_file), exist_ok=True)
-
-    if data_args.domain == "multi":
-        trans_model = MultiDomainTranslator(model_args, max_new_tokens=infer_args.max_new_tokens)
-    else:
-        trans_model = SingleDomainTranslator(model_args, domain=data_args.domain, max_new_tokens=infer_args.max_new_tokens)
-
+    trans_model = Translator(model_args, domain=None if data_args.domain == "multi" else data_args.domain, max_new_tokens=infer_args.max_new_tokens)
     with open(data_args.eval_data_path, "r") as task:
         data = json.load(task)
 
