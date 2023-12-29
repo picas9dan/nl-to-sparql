@@ -60,12 +60,15 @@ def get_trainer(
 
     data_collator = DataCollatorForSeq2Seq(tokenizer=tokenizer, model=model)
     
-    bleu = evaluate.load("bleu")
+    sacrebleu = evaluate.load("sacrebleu")
     exact_match = evaluate.load("exact_match")
     
     def postprocess_then_normalize(pred: str):
         pred = postprocess_sparql(pred)
-        pred = str(SparqlQuery.fromstring(pred))
+        try:
+            pred = str(SparqlQuery.fromstring(pred))
+        except:
+            pass
         return pred
 
     def compute_metrics(eval_preds):
@@ -78,12 +81,12 @@ def get_trainer(
         decoded_preds = [postprocess_then_normalize(x) for x in decoded_preds]
         decoded_labels = [postprocess_then_normalize(x) for x in decoded_labels]
 
-        bleu_score = bleu.compute(references=[[x] for x in decoded_labels], predictions=decoded_preds)
-        exact_match_score = exact_match.compute(references=decoded_labels, predictions=decoded_preds)
+        sacrebleu_score = sacrebleu.compute(references=decoded_labels, predictions=decoded_preds)
+        exactmatch_score = exact_match.compute(references=decoded_labels, predictions=decoded_preds)
 
         return dict(
-            bleu=bleu_score,
-            exact_match=exact_match_score
+            sacrebleu=sacrebleu_score,
+            exact_match=exactmatch_score
         )
 
     return Seq2SeqTrainer(
