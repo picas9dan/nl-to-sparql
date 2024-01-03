@@ -5,14 +5,9 @@ from typing import List
 from sklearn.metrics import accuracy_score
 from sacrebleu.metrics import BLEU
 
-from core.sparql import SparqlQuery
+from core.sparql.normalize import normalize_query
 
 
-def normalize_query(query: str):
-    try:
-        return str(SparqlQuery.fromstring(query))
-    except Exception:
-        return ""
 
 
 def get_bleu_metrics(refs: List[List[str]], sys: List[str]):

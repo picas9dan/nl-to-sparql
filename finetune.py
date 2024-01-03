@@ -17,6 +17,7 @@ from core.data_processing.sparql import postprocess_sparql, preprocess_sparql
 from core.args_schema import DatasetArguments, ModelArguments
 from core.model_utils import get_hf_model_and_tokenizer
 from core.sparql import SparqlQuery
+from core.sparql.normalize import make_canonical, normalize_query
 
 
 def get_trainer(
@@ -63,17 +64,11 @@ def get_trainer(
     sacrebleu = evaluate.load("sacrebleu")
     exact_match = evaluate.load("exact_match")
     
-    def normalize(text: str):
-        try:
-            return str(SparqlQuery.fromstring(text))
-        except:
-            return text
-    
     def decode_tokens_then_normalize(tokens):
         tokens = np.where(tokens != -100, tokens, tokenizer.pad_token_id)
         decoded = tokenizer.batch_decode(tokens, skip_special_tokens=True)
         decoded = [postprocess_sparql(x) for x in decoded]
-        decoded = [normalize(x) for x in decoded]
+        decoded = [normalize_query(x) for x in decoded]
         return decoded
 
     def compute_metrics(eval_preds):

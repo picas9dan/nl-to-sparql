@@ -127,6 +127,7 @@ class SparqlQuery(SparqlBase):
             elif graph_patterns_str.startswith('['):
                 stack = ['[']
                 ptr = 1
+                obj = None
                 while ptr < len(graph_patterns_str):
                     if graph_patterns_str[ptr] in "[":
                         stack.append('[')
@@ -145,6 +146,7 @@ class SparqlQuery(SparqlBase):
                     else:
                         pass
                     ptr += 1
+                assert obj is not None
             else:
                 splits = graph_patterns_str.split(maxsplit=1)
                 if len(splits) == 2:
