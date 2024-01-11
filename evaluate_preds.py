@@ -1,13 +1,12 @@
 import argparse
 import json
 from typing import List
+import pandas as pd
 
 from sklearn.metrics import accuracy_score
 from sacrebleu.metrics import BLEU
 
 from core.sparql.normalize import normalize_query
-
-
 
 
 def get_bleu_metrics(refs: List[List[str]], sys: List[str]):
@@ -24,10 +23,8 @@ def get_bleu_metrics(refs: List[List[str]], sys: List[str]):
 
 
 def get_translation_metrics_singledomain(data: List[dict]):
-    groundtruths = [normalize_query(datum["groundtruth"]["sparql"]) for datum in data]
-    predictions = [
-        normalize_query(datum["prediction"]["sparql"]["decoded"]) for datum in data
-    ]
+    groundtruths = [datum["groundtruth"]["sparql"] for datum in data]
+    predictions = [datum["prediction"]["sparql"] for datum in data]
 
     return dict(
         bleu=get_bleu_metrics([groundtruths], predictions),
@@ -84,11 +81,14 @@ def get_translation_metrics_multidomain(data: List[dict]):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("input_path", type=str)
-    parser.add_argument("output_path", type=str)
     args = parser.parse_args()
 
     with open(args.input_path, "r") as f:
         data = json.load(f)
+
+    for datum in data:
+        datum["groundtruth"]["sparql"] = normalize_query(datum["groundtruth"]["sparql"])
+        datum["prediction"]["sparql"] = normalize_query(datum["prediction"]["sparql"]["decoded"])
 
     print("***Computing evaluation metrics***")
     if "domain" in data[0]["prediction"]:
@@ -100,8 +100,29 @@ def main():
         eval_metrics = get_translation_metrics_singledomain(data)
     print("Evaluation metrics: ", eval_metrics)
 
-    with open(args.output_path, "w") as f:
+    filename = args.input_path.rsplit(".")[0]
+    with open(filename + "_eval.json", "w") as f:
         json.dump(eval_metrics, f, indent=4)
+
+    df_data = [
+        dict(
+            id=datum["id"],
+            question=datum["question"],
+            gt_domain=datum["groundtruth"]["domain"],
+            gt_sparql=datum["groundtruth"]["sparql"],
+            pred_domain=datum["prediction"]["domain"],
+            pred_sparql=datum["prediction"]["sparql"],
+            domain_match=1
+            if datum["prediction"]["domain"] == datum["groundtruth"]["domain"]
+            else 0,
+            sparql_match=1
+            if datum["prediction"]["sparql"] == datum["groundtruth"]["sparql"]
+            else 0,
+        )
+        for datum in data
+    ]
+    df = pd.DataFrame(df_data)
+    df.to_csv(filename + "_eval.csv", index=False)
 
 
 if __name__ == "__main__":
