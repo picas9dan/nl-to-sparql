@@ -95,6 +95,7 @@ def main():
         eval_metrics = dict(
             domain_cls=get_domaincls_metrics(data),
             translation=get_translation_metrics_multidomain(data),
+            latency=sum([datum["latency"] for datum in data]) / len(data)
         )
     else:
         eval_metrics = get_translation_metrics_singledomain(data)

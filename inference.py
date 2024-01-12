@@ -1,6 +1,7 @@
 import json
 import os
 import time
+import pandas as pd
 
 import transformers
 from tqdm import tqdm
@@ -16,9 +17,25 @@ def infer():
     model_args, data_args, infer_args = hfparser.parse_args_into_dataclasses()
 
     os.makedirs(os.path.dirname(infer_args.out_file), exist_ok=True)
-    trans_model = Translator(model_args, domain=None if data_args.domain == "multi" else data_args.domain, max_new_tokens=infer_args.max_new_tokens)
-    with open(data_args.eval_data_path, "r") as task:
-        data = json.load(task)
+    trans_model = Translator(
+        model_args,
+        domain=None if data_args.domain == "multi" else data_args.domain,
+        max_new_tokens=infer_args.max_new_tokens,
+    )
+
+    if data_args.eval_data_path.endswith("json"):
+        with open(data_args.eval_data_path, "r") as f:
+            data = json.load(f)
+    elif data_args.eval_data_path.endswith("csv"):
+        df = pd.read_csv(data_args.eval_data_path)
+        data = df.apply(
+            lambda row: dict(
+                id=row["id"],
+                domain=row["domain"],
+                question=row["nlq"],
+                query=dict(sparql=row["sparql"]),
+            ), axis=1
+        )
 
     data_out = []
 
@@ -28,7 +45,9 @@ def infer():
             pred = trans_model.nl2sparql(datum["question"])
             t_end = time.time()
 
-            domain = data_args.domain if data_args.domain != "multi" else datum["domain"]
+            domain = (
+                data_args.domain if data_args.domain != "multi" else datum["domain"]
+            )
             datum_out = dict(
                 id=datum["id"],
                 question=datum["question"],
