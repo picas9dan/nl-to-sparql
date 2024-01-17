@@ -1,7 +1,15 @@
 from typing import List
 
 from core.sparql import SparqlQuery
-from core.sparql.graph_pattern import BindClause, FilterClause, GraphPattern, OptionalClause, TriplePattern, ValuesClause
+from core.sparql.graph_pattern import (
+    BindClause,
+    FilterClause,
+    GraphPattern,
+    OptionalClause,
+    TriplePattern,
+    ValuesClause,
+)
+from core.sparql.where_clause import WhereClause
 
 
 def make_canonical(query: SparqlQuery):
@@ -19,7 +27,7 @@ def make_canonical(query: SparqlQuery):
     bind_clauses: List[BindClause] = []
     filter_clauses: List[FilterClause] = []
 
-    for pattern in query.graph_patterns:
+    for pattern in query.where_clause.graph_patterns:
         if isinstance(pattern, ValuesClause):
             values_clauses.append(pattern)
         elif isinstance(pattern, TriplePattern):
@@ -32,7 +40,7 @@ def make_canonical(query: SparqlQuery):
             filter_clauses.append(pattern)
         else:
             raise ValueError("Unrecognized pattern type: " + pattern)
-        
+
     values_clauses.sort()
     triples.sort()
     optional_clauses.sort()
@@ -40,10 +48,20 @@ def make_canonical(query: SparqlQuery):
     filter_clauses.sort()
 
     patterns: List[GraphPattern] = []
-    for lst in (values_clauses, triples, optional_clauses, bind_clauses, filter_clauses):
+    for lst in (
+        values_clauses,
+        triples,
+        optional_clauses,
+        bind_clauses,
+        filter_clauses,
+    ):
         patterns.extend(lst)
 
-    return SparqlQuery(query.select_clause, patterns)
+    return SparqlQuery(
+        select_clause=query.select_clause,
+        where_clause=WhereClause(patterns),
+        solultion_modifier=query.solultion_modifier,
+    )
 
 
 def normalize_query(query: str):
