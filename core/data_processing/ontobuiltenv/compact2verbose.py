@@ -1,6 +1,7 @@
 from core.sparql import SparqlQuery
 from core.sparql.graph_pattern import GraphPattern, OptionalClause, TriplePattern
 from core.sparql.query_form import SelectClause
+from core.sparql.where_clause import WhereClause
 
 
 class OBECompact2VerboseConverter:
@@ -25,13 +26,42 @@ class OBECompact2VerboseConverter:
         """
         patterns = [
             TriplePattern.from_triple("?Property", "obe:hasAddress", "?Address"),
-            OptionalClause([TriplePattern.from_triple("?Address", "ict:hasBuildingName", "?Building")]),
-            OptionalClause([TriplePattern.from_triple("?Address", "ict:hasStreet", "?Street")]),
-            OptionalClause([TriplePattern.from_triple("?Address", "ict:hasStreetNumber", "?StreetNumber")]),
-            OptionalClause([TriplePattern.from_triple("?Address", "obe:hasUnitName", "?UnitName")]),
-            OptionalClause([TriplePattern.from_triple("?Address", "obe:hasPostalCode/rdfs:label", "?PostalCode")])
+            OptionalClause(
+                [
+                    TriplePattern.from_triple(
+                        "?Address", "ict:hasBuildingName", "?Building"
+                    )
+                ]
+            ),
+            OptionalClause(
+                [TriplePattern.from_triple("?Address", "ict:hasStreet", "?Street")]
+            ),
+            OptionalClause(
+                [
+                    TriplePattern.from_triple(
+                        "?Address", "ict:hasStreetNumber", "?StreetNumber"
+                    )
+                ]
+            ),
+            OptionalClause(
+                [TriplePattern.from_triple("?Address", "obe:hasUnitName", "?UnitName")]
+            ),
+            OptionalClause(
+                [
+                    TriplePattern.from_triple(
+                        "?Address", "obe:hasPostalCode/rdfs:label", "?PostalCode"
+                    )
+                ]
+            ),
         ]
-        vars = ["?Address", "?BuildingName", "?Street", "?StreetNumber", "?UnitName", "?PostalCode"]
+        vars = [
+            "?Address",
+            "?BuildingName",
+            "?Street",
+            "?StreetNumber",
+            "?UnitName",
+            "?PostalCode",
+        ]
 
         return patterns, vars
 
@@ -46,8 +76,14 @@ class OBECompact2VerboseConverter:
 
             p, o = pattern.tails[0]
 
-            key = p[len("obe:has"):]
-            assert key in ["TotalFloorArea", "MarketValue", "GroundElevation", "TotalMonetaryValue", "MonetaryValue"]
+            key = p[len("obe:has") :]
+            assert key in [
+                "TotalFloorArea",
+                "MarketValue",
+                "GroundElevation",
+                "TotalMonetaryValue",
+                "MonetaryValue",
+            ]
             assert o == "?" + key
 
             """
@@ -64,12 +100,17 @@ class OBECompact2VerboseConverter:
                     tails=[
                         (
                             "om:hasValue",
-                            "[ om:hasNumericalValue ?{key}NumericalValue ; om:hasUnit/om:symbol ?{key}Unit ]".format(key=key),
+                            "[ om:hasNumericalValue ?{key}NumericalValue ; om:hasUnit/om:symbol ?{key}Unit ]".format(
+                                key=key
+                            ),
                         )
                     ],
-                )
+                ),
             ]
-            vars = ["?{key}NumericalValue".format(key=key), "?{key}Unit".format(key=key)]
+            vars = [
+                "?{key}NumericalValue".format(key=key),
+                "?{key}Unit".format(key=key),
+            ]
             return patterns, vars
         except AssertionError:
             return None
@@ -108,18 +149,50 @@ class OBECompact2VerboseConverter:
 
             patterns = [
                 pattern,
-                OptionalClause([TriplePattern.from_triple("?Address", "ict:hasBuildingName", "?Building")]),
-                OptionalClause([TriplePattern.from_triple("?Address", "ict:hasStreet", "?Street")]),
-                OptionalClause([TriplePattern.from_triple("?Address", "ict:hasStreetNumber", "?StreetNumber")]),
-                OptionalClause([TriplePattern.from_triple("?Address", "obe:hasUnitName", "?UnitName")]),
-                OptionalClause([TriplePattern.from_triple("?Address", "obe:hasPostalCode/rdfs:label", "?PostalCode")])
+                OptionalClause(
+                    [
+                        TriplePattern.from_triple(
+                            "?Address", "ict:hasBuildingName", "?Building"
+                        )
+                    ]
+                ),
+                OptionalClause(
+                    [TriplePattern.from_triple("?Address", "ict:hasStreet", "?Street")]
+                ),
+                OptionalClause(
+                    [
+                        TriplePattern.from_triple(
+                            "?Address", "ict:hasStreetNumber", "?StreetNumber"
+                        )
+                    ]
+                ),
+                OptionalClause(
+                    [
+                        TriplePattern.from_triple(
+                            "?Address", "obe:hasUnitName", "?UnitName"
+                        )
+                    ]
+                ),
+                OptionalClause(
+                    [
+                        TriplePattern.from_triple(
+                            "?Address", "obe:hasPostalCode/rdfs:label", "?PostalCode"
+                        )
+                    ]
+                ),
             ]
-            vars = ["?BuildingName", "?Street", "?StreetNumber", "?UnitName", "?PostalCode"]
+            vars = [
+                "?BuildingName",
+                "?Street",
+                "?StreetNumber",
+                "?UnitName",
+                "?PostalCode",
+            ]
 
             return patterns, vars
         except AssertionError:
             return None
-        
+
     def _try_convert_property_haspropertyusage_triple(self, pattern: GraphPattern):
         try:
             """
@@ -139,7 +212,9 @@ class OBECompact2VerboseConverter:
             """
             patterns = [
                 pattern,
-                TriplePattern.from_triple("?PropertyUsage", "a/rdfs:label", "?PropertyUsageLabel")
+                TriplePattern.from_triple(
+                    "?PropertyUsage", "a/rdfs:label", "?PropertyUsageLabel"
+                ),
             ]
             vars = ["?PropertyUsageLabel"]
             return patterns, vars
@@ -155,7 +230,7 @@ class OBECompact2VerboseConverter:
         else:
             graph_patterns_verbose = []
 
-        for pattern in sparql_compact.graph_patterns:
+        for pattern in sparql_compact.where_clause.graph_patterns:
             optional = self._try_convert_property_hasmeasure_triple(pattern)
             if optional is not None:
                 patterns, select_vars = optional
@@ -183,5 +258,6 @@ class OBECompact2VerboseConverter:
             select_clause=SelectClause(
                 solution_modifier="DISTINCT", vars=select_vars_verbose
             ),
-            graph_patterns=graph_patterns_verbose,
+            where_clause=WhereClause(graph_patterns_verbose),
+            solultion_modifier=sparql_compact.solultion_modifier,
         )

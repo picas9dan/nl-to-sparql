@@ -8,6 +8,7 @@ from core.sparql.graph_pattern import (
     TriplePattern,
     ValuesClause,
 )
+from core.sparql.where_clause import WhereClause
 
 
 class OKSparqlCompact2VerboseConverter:
@@ -448,7 +449,7 @@ class OKSparqlCompact2VerboseConverter:
             return None
 
     def convert(self, sparql_compact: SparqlQuery):
-        graph_patterns = list(sparql_compact.graph_patterns)
+        graph_patterns = list(sparql_compact.where_clause.graph_patterns)
         graph_patterns.reverse()
 
         select_vars_verbose = list(sparql_compact.select_clause.vars)
@@ -488,5 +489,6 @@ class OKSparqlCompact2VerboseConverter:
             select_clause=SelectClause(
                 solution_modifier="DISTINCT", vars=select_vars_verbose
             ),
-            graph_patterns=graph_patterns_verbose,
+            where_clause=WhereClause(graph_patterns_verbose),
+            solultion_modifier=sparql_compact.solultion_modifier
         )
