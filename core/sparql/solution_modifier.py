@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional, Tuple
 
-from core.sparql.sparql_base import SparqlBase
+from .sparql_base import SparqlBase
 
 
 @dataclass

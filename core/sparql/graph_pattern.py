@@ -2,7 +2,7 @@ from dataclasses import dataclass
 import itertools
 from typing import Iterable, Tuple
 
-from core.sparql.sparql_base import SparqlBase
+from .sparql_base import SparqlBase
 
 
 class GraphPattern(SparqlBase):

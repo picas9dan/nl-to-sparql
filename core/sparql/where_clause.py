@@ -1,13 +1,14 @@
 from dataclasses import dataclass
 from typing import Tuple
-from core.sparql.graph_pattern import (
+
+from .graph_pattern import (
     FilterClause,
     GraphPattern,
     TriplePattern,
     ValuesClause,
 )
 
-from core.sparql.sparql_base import SparqlBase
+from .sparql_base import SparqlBase
 
 
 @dataclass

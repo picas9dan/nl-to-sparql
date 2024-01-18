@@ -1,9 +1,10 @@
 from dataclasses import dataclass
 from typing import Optional
-from core.sparql.query_form import SelectClause
-from core.sparql.solution_modifier import SolutionModifier
-from core.sparql.sparql_base import SparqlBase
-from core.sparql.where_clause import WhereClause
+
+from .query_form import SelectClause
+from .solution_modifier import SolutionModifier
+from .sparql_base import SparqlBase
+from .where_clause import WhereClause
 
 
 @dataclass(order=True, frozen=True)

@@ -16,8 +16,7 @@ from core.data_processing.nl import preprocess_nl
 from core.data_processing.sparql import postprocess_sparql, preprocess_sparql
 from core.args_schema import DatasetArguments, ModelArguments
 from core.model_utils import get_hf_model_and_tokenizer
-from core.sparql import SparqlQuery
-from core.sparql.normalize import make_canonical, normalize_query
+from core.sparql.normalize import normalize_query
 
 
 def get_trainer(
