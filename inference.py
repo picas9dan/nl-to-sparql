@@ -36,6 +36,8 @@ def infer():
                 query=dict(sparql=row["sparql"]),
             ), axis=1
         )
+    else:
+        raise ValueError("Unrecognised data format: " + data_args.eval_data_path)
 
     data_out = []
 
